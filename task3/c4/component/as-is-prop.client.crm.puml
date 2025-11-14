@@ -1,0 +1,35 @@
+@startuml
+
+!theme carbon-gray
+!include <C4/C4_Component>
+!include doc/common/c4-custom-rel.iuml
+!include doc/common/theme.iuml
+
+' так сделано в изначальной схеме
+SHOW_PERSON_OUTLINE()
+
+title PropDevelopment — C4 Component - client-crm-app
+header «PropDevelopment»
+
+Container(prop.client.storefront, "Витрина продаж", "JavaScript, React", "Витрина для подбора и бронирования объектов недвижимости")
+Container(prop.client.mart, "client-mart-app", "Kotlin, SpringBoot", "Приложение для: - предоставления информации об объектах недвижимости, - проведения онлайн-сделок")
+Container(prop.client.tour, "client-tour-app", "Kotlin, SpringBoot", "Приложение для проведения 3D-тура по объекту недвижимости (онлайн-тур)")
+Container(prop.ad.data, "Active Directory", "MS Active directory", "Служба каталогов, которая обслуживает финансовые сервисы")
+Container(prop.storage, "Хранилище данных", "Greenplum", "Единое хранилище данных для всех систем компании")
+
+Container_Boundary(prop.client.crm, "client-crm-app", "e.g. SpringBoot, ElasticSearch, Dynamics CRM", "Система управления клиентскими данными") {
+        Component(prop.client.crm.app, "client-crm-app", "e.g. SpringBoot, ElasticSearch, Dynamics CRM", "Система управления клиентскими данными")
+        ComponentDb(prop.client.crm.db, "crm-db", "MSSQL", "База данных системы CRM")
+        Rel_D(prop.client.crm.app, prop.client.crm.db, "", "JDBC")
+}
+
+Rel_D(prop.client.storefront, prop.client.crm.app, "Регистрация клиента\nКарточка клиента\nПрофиль клиента", "REST")
+Rel_L(prop.client.crm.app, prop.client.mart, "Публикация каталога объектов", "Kafka")
+Rel_R(prop.client.crm.app, prop.client.tour, "Публикация каталога объектов", "Kafka")
+Rel_D(prop.client.crm.app, prop.ad.data, "Аутентификация менеджеров")
+Rel_D(prop.client.crm.db, prop.storage, "Передача сырых данных", "CDC")
+
+@enduml
+
+
+

@@ -1,0 +1,9 @@
+@startsalt
+
+!$status_codes = {
+    "unknown"  : "<back:lightgray>Не известен",
+    "partial"  : "<back:yellow>Частично",
+    "complete" : "<back:lightgreen>Готово"
+}
+
+@endsalt
