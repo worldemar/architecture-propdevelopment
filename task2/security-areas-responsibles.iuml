@@ -1,0 +1,19 @@
+@startsalt
+
+!$responsible_codes = {
+    "arch"         : "<back:#FFAB40><color:black>Архитекторы",
+    "devops"       : "<back:#26C6DA><color:black>DevOps",
+    "infosec"      : "<back:#1E3A8A><color:white>ИБ",
+    "product"      : "<back:#BA68C8><color:white>Владельцы продуктов",
+    "owners"       : "<back:#66BB6A><color:black>Владельцы данных",
+    "legal"        : "<back:#FBC02D><color:black>Юристы",
+    "support"      : "<back:#9E9E9E><color:black>Саппорт",
+    "dev"          : "<back:#42A5F5><color:white>Разработчики",
+    "analytics"    : "<back:#26A69A><color:black>Аналитики",
+    "data"         : "<back:#7CB342><color:black>Дата-команда",
+    "qa"           : "<back:#EC407A><color:white>QA",
+    "integrations" : "<back:#795548><color:white>Владельцы интеграций",
+    "itlead"       : "<back:#BDBDBD><color:black>Руководство ИТ"
+}
+
+@endsalt

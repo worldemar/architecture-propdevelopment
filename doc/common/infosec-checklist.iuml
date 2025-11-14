@@ -1,0 +1,175 @@
+@startuml
+
+!theme carbon-gray
+
+<style>
+root {
+    Margin: 0
+}
+activityDiagram {
+    BackgroundColor: ivory
+    FontName: "Century Gothic"
+}
+Activity {
+    LineColor: Transparent
+    Padding: 0
+}
+Title {
+    Margin: 0
+    Padding: 0
+}
+Arrow {
+    LineColor: Transparent
+}
+</style>
+
+!$INFOSEC_COLOR={
+    "Код" : "#Transparent",
+    "A"   : "#BBDEFB",
+    "D"   : "#C8E6C9",
+    "INF" : "#FFE0B2",
+    "IR"  : "#E1BEE7",
+    "G"   : "#FFF59D",
+    "PH"  : "#D7CCC8" 
+}
+!$INFOSEC_TITLE={
+    "Код" : "Требования",
+    "A"   : "Управление доступом",
+    "D"   : "Безопасность данных",
+    "INF" : "Защита инфраструктуры",
+    "IR"  : "Управление инцидентами",
+    "G"   : "Общие вопросы",
+    "PH"  : "Управление оборудованием и физической безопасностью"
+}
+!$INFOSEC_SUB_TITLE={
+    "Код" : "",
+    "A"   : "",
+    "D"   : "",
+    "INF" : "",
+    "IR"  : "",
+    "G"   : "",
+    "PH"  : ""
+}
+!$INFOSEC_INDEX={ "A": 1, "D": 1, "INF": 1, "IR": 1, "G": 1, "PH": 1 }
+!$INFOSEC_ANSWER_COLUMN="Да/Нет"
+!$INFOSEC_THIRD_COLUMN=""
+
+!function $render_answer($ans)
+!$out = ""
+!if %strlen($ans) > 0
+    !if %intval($ans) == 1
+        !$out = "<:white_check_mark:> ДА"
+    !elseif %intval($ans) == 0
+        !$out = "<:stop_sign:> НЕТ"
+    !endif
+!endif
+!return $out
+!endfunction
+
+!procedure $header($code, $text)
+!$INFOSEC_SUB_TITLE=%json_set($INFOSEC_SUB_TITLE, $code, $text)
+!$additional_title = ""
+!if %strlen($INFOSEC_SUB_TITLE[$code]) > 0
+    !$additional_title = " - " + $INFOSEC_SUB_TITLE[$code]
+!endif
+|=<$INFOSEC_COLOR[$code]><font:Consolas><size:16><b> $code |=<$INFOSEC_COLOR[$code]> $INFOSEC_TITLE[$code] $additional_title |=<$INFOSEC_COLOR[$code]> $INFOSEC_ANSWER_COLUMN |=<$INFOSEC_COLOR[$code]>$INFOSEC_THIRD_COLUMN |
+!endprocedure
+
+!function $pad($len, $integer)
+!$string = %string($integer)
+!while %strlen($string) < $len
+    !$string = "0" + $string
+!endwhile
+!return $string
+!endfunction
+
+!procedure $row4($code, $requirement, $answer, $comment)
+!$prefix = ""
+!if %strlen($INFOSEC_SUB_TITLE[$code]) > 0
+    !$prefix = " [ " + $INFOSEC_SUB_TITLE[$code] + " ] "
+!endif
+|<$INFOSEC_COLOR[$code]><font:Consolas><size:16> $code$pad(3, $INFOSEC_INDEX[$code]) |<$INFOSEC_COLOR[$code]> $prefix $requirement |<$INFOSEC_COLOR[$code]> $render_answer($answer) |<$INFOSEC_COLOR[$code]> $comment |
+!$INFOSEC_INDEX=%json_set($INFOSEC_INDEX, $code, %intval($INFOSEC_INDEX[$code]) + 1)
+!endprocedure
+!procedure $row($code, $requirement, $comment)
+$row4($code, $requirement, "", $comment)
+!endprocedure
+
+!procedure $header($extra)
+!$INFOSEC_THIRD_COLUMN=$extra
+$header("Код", "")
+!endprocedure
+
+!procedure Access($text)
+$header("A", $text)
+!endprocedure
+
+!procedure Data($text)
+$header("D", $text)
+!endprocedure
+
+!procedure Infrastructure($text)
+$header("INF", $text)
+!endprocedure
+
+!procedure Incident($text)
+$header("IR", $text)
+!endprocedure
+
+!procedure General($text)
+$header("G", $text)
+!endprocedure
+
+!procedure Physical($text)
+$header("PH", $text)
+!endprocedure
+
+!procedure $access($text, $answer, $comment)
+$row4("A", $text, $answer, $comment)
+!endprocedure
+
+!procedure $data($text, $answer, $comment)
+$row4("D", $text, $answer, $comment)
+!endprocedure
+
+!procedure $infrastructure($text, $answer, $comment)
+$row4("INF", $text, $answer, $comment)
+!endprocedure
+
+!procedure $incident($text, $answer, $comment)
+$row4("IR", $text, $answer, $comment)
+!endprocedure
+
+!procedure $general($text, $answer, $comment)
+$row4("G", $text, $answer, $comment)
+!endprocedure
+
+!procedure $physical($text, $answer, $comment)
+$row4("PH", $text, $answer, $comment)
+!endprocedure
+
+!procedure $accessAns($text, $answer, $comment)
+$row4("A", $text, $answer, $comment)
+!endprocedure
+
+!procedure $dataAns($text, $answer, $comment)
+$row4("D", $text, $answer, $comment)
+!endprocedure
+
+!procedure $infrastructureAns($text, $answer, $comment)
+$row4("INF", $text, $answer, $comment)
+!endprocedure
+
+!procedure $incidentAns($text, $answer, $comment)
+$row4("IR", $text, $answer, $comment)
+!endprocedure
+
+!procedure $generalAns($text, $answer, $comment)
+$row4("G", $text, $answer, $comment)
+!endprocedure
+
+!procedure $physicalAns($text, $answer, $comment)
+$row4("PH", $text, $answer, $comment)
+!endprocedure
+
+@enduml

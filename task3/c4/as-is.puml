@@ -1,0 +1,130 @@
+@startuml
+
+!theme carbon-gray
+!include <C4/C4_Component>
+!include doc/common/c4-custom-rel.iuml
+!include doc/common/theme.iuml
+
+' так сделано в изначальной схеме
+SHOW_PERSON_OUTLINE()
+
+title PropDevelopment - C4 Component
+header «PropDevelopment»
+
+AddElementTag("firewall", $bgColor="red")
+
+Person(client, "Клиент", "Клиент")
+Person(owner, "Собственник", "Клиент")
+Person(manager, "Менеджер", "Работает с клиентами и объектами недвижимости, администрирует онлайн-сделки")
+Person(accountant, "Бухгалтер", "Ведёт бухгалтерский учёт")
+Person(business_analyst, "Бизнес-аналитик", "Оптимизирует процессы и развивает прикладные бизнес-системы. Администрирует системы")
+Person(bi_analyst, "Аналитик BI", "Анализирует данные и готовит отчётность")
+
+Container(firewall_client, "Firewall", $tags="firewall")
+Container(firewall_owner, "Firewall", $tags="firewall")
+
+System_Ext(gov_reg, "Государственные регистрационные органы", "Отвечают за регистрационные действия с объектами недвижимости")
+System_Ext(payment_system, "Платёжная система", "Провайдер онлайн-платежей")
+System_Ext(utility_provider, "Поставщик ресурсов ЖКХ")
+
+Boundary(prop, "PropDevelopment") {
+    Boundary(client_services, "Группа сервисов для клиентов") {
+        Component(prop.client.storefront, "Витрина продаж", "JavaScript, React", "Витрина для подбора и бронирования объектов недвижимости")
+        Component(prop.client.mart_estate.app, "client-mart-estate-app", "Kotlin, SpringBoot", "Приложение для управления информацией об объектах недвижимости")
+        ComponentDb(prop.client.mart_estate.db, "client-mart-estate-db", "PostgreSQL", "База данных объектов недвижимости")
+        Component(prop.client.mart.app, "client-mart-app", "Kotlin, SpringBoot", "Приложение для: - предоставления информации об объектах недвижимости, - проведения онлайн-сделок")
+        ComponentDb(prop.client.mart.db, "client-mart-db", "PostgreSQL", "База данных для хранения информации об объектах недвижимости и сделкам по ним")
+        Component(prop.client.tour.app, "client-tour-app", "Kotlin, SpringBoot", "Приложение для проведения 3D-тура по объекту недвижимости (онлайн-тур)")
+        ComponentDb(prop.client.tour.db, "client-tour-db", "PostgreSQL", "База данных проведения онлайн-тура")
+        Component(prop.client.crm.app, "client-crm-app", "e.g. SpringBoot, ElasticSearch, Dynamics CRM", "Система управления клиентскими данными")
+        ComponentDb(prop.client.crm.db, "crm-db", "MSSQL", "База данных системы CRM")
+
+        Rel_D(prop.client.storefront, prop.client.mart.app, "", "REST")
+        Rel_D(prop.client.storefront, prop.client.mart_estate.app, "Получить данные по объектам недвижимости", "REST")
+        Rel_D(prop.client.storefront, prop.client.crm.app, "Регистрация клиента\nКарточка клиента\nПрофиль клиента", "REST")
+        Rel_D(prop.client.storefront, prop.client.tour.app, "", "")
+
+        Rel_D(prop.client.mart.app, prop.client.mart.db, "", "JDBC")
+        Rel_D(prop.client.mart_estate.app, prop.client.mart_estate.db, "", "JDBC")
+        Rel_D(prop.client.crm.app, prop.client.crm.db, "", "JDBC")
+        Rel_D(prop.client.tour.app, prop.client.tour.db, "", "")
+
+        Rel_L(prop.client.crm.app, prop.client.mart.app, "Публикация каталога объектов", "Kafka")
+        Rel_R(prop.client.crm.app, prop.client.tour.app, "Публикация каталога объектов", "Kafka")
+
+        Rel_U(prop.client.mart.app, gov_reg, "СМЭВ", "SOAP")
+        ' help keep prop.client.mart_estate.app at left
+        Lay_U(prop.client.mart_estate.app, gov_reg)
+    }
+
+    Boundary(zku_services, "Группа сервисов ЖКУ") {
+        Component(prop.zku.storefront, "Витрина сервисов для собственников", "Mobile app(iOS, Android)", "Мобильные приложения для собственников")
+        Component(prop.zku.tenant_core.app, "tenant-core-app", "Kotlin, SpringBoot", "Приложение для предоставления услуг собственникам")
+        ComponentDb(prop.zku.tenant_core.db, "tenant-core-db", "PostgreSQL", "База данных услуг ЖКХ по собственникам")
+        Component(prop.zku.crm.app, "CRM", "Kotlin, Spring Boot", "Система управления данными собственников")
+        ComponentDb(prop.zku.crm.db, "crm-tenant-db", "PostgreSQL", "База данных CRM по собственникам")
+
+        Rel(prop.zku.storefront, prop.zku.tenant_core.app, "", "REST/WS")
+        Rel(prop.zku.tenant_core.app, prop.zku.tenant_core.db, "", "JDBC")
+
+        Rel(prop.zku.storefront, prop.zku.crm.app, "", "REST")
+        Rel(prop.zku.crm.app, prop.zku.crm.db, "", "JDBC")
+
+        Rel_L(prop.zku.tenant_core.app, prop.zku.crm.app, "Получение клиентских данных", "REST")
+        Rel_D(prop.zku.tenant_core.app, payment_system, "")
+        Rel_R(prop.zku.tenant_core.app, utility_provider, "")
+    }
+
+    Boundary(storage, "") {
+        Component(prop.storage.app, "Хранилище данных", "Greenplum", "Единое хранилище данных для всех систем компании")
+        ComponentDb(prop.storage.db, "DWH Хранилище", "S3", "Физическое хранилище данных DWH")
+        Rel(prop.storage.app, prop.storage.db, "")
+
+        Rel_D(prop.client.mart.db, prop.storage.app, "Передача сырых данных", "CDC")
+        Rel_D(prop.client.mart_estate.db, prop.storage.app, "Передача сырых данных", "CDC")
+        Rel_D(prop.client.crm.db, prop.storage.app, "Передача сырых данных", "CDC")
+        Rel_D(prop.zku.tenant_core.db, prop.storage.app, "Передача сырых данных", "CDC")
+        Rel_D(prop.zku.crm.db, prop.storage.app, "Передача сырых данных", "CDC")
+    }
+
+    Boundary(accountant_group, "") {
+        Component(prop.accountant.service, "accountant-service-1", "Keycloak", "Система бухгалтерского учёта")
+        Component(prop.ad.apps, "Active Directory", "MS Active directory", "Служба каталогов, которая обслуживает прикладные бизнес-системы и системы обработки данных")
+        ComponentDb(prop.accountant.service.db, "auth-db-2", "PostgreSQL", "База данных сервиса аутентификации покупателей")
+
+        Rel_L(prop.accountant.service, prop.accountant.service.db, "")
+        Rel_R(prop.accountant.service, prop.ad.apps, "Аутентификация")
+    }
+
+    Boundary(auth_group, ""){
+        Component(prop.auth.service, "auth-service-1", "Keycloak", "Сервис аутентификации покупателей")
+        ComponentDb(prop.auth.db, "auth-db-1", "PostgreSQL", "База данных сервиса аутентификации покупателей")
+        Rel_U(prop.auth.service, prop.auth.db, "")
+
+        Rel_R(prop.client.storefront, prop.auth.service, "Регистрация\nАутентификация", "REST")
+        Rel_L(prop.zku.storefront, prop.auth.service, "Регистрация\nАутентификация", "REST")
+    }
+
+    Container(prop.ad.data, "Active Directory", "MS Active directory", "Служба каталогов, которая обслуживает финансовые сервисы")
+    Rel_D(prop.client.crm.app, prop.ad.data, "Аутентификация менеджеров")
+    Rel_U(prop.storage.app, prop.ad.data, "Аутентификация бизнес-аналитика")
+    Rel_L(prop.zku.crm.app, prop.ad.data, "Аутентификация менеджеров")
+}
+
+Rel_D(client, firewall_client, "")
+Rel_D(firewall_client, prop.client.storefront, "")
+
+Rel_D(owner, firewall_owner, "")
+Rel_D(firewall_owner, prop.zku.storefront, "")
+
+Rel_D(business_analyst, prop, "")
+Rel_D(manager, prop, "")
+
+Rel_L(bi_analyst, prop.storage.app, "")
+
+Rel_U(accountant, prop.accountant.service, "")
+
+Lay_R(prop.storage.db, prop.accountant.service.db)
+
+@enduml
+

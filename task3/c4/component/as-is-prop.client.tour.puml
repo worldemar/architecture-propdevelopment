@@ -1,0 +1,29 @@
+@startuml
+
+!theme carbon-gray
+!include <C4/C4_Component>
+!include doc/common/c4-custom-rel.iuml
+!include doc/common/theme.iuml
+
+' так сделано в изначальной схеме
+SHOW_PERSON_OUTLINE()
+
+title PropDevelopment - C4 Component - client-tour-app
+header «PropDevelopment»
+
+Container(prop.client.storefront, "Витрина продаж", "JavaScript, React", "Витрина для подбора и бронирования объектов недвижимости")
+Container(prop.client.crm, "client-crm-app", "e.g. SpringBoot, ElasticSearch, Dynamics CRM", "Система управления клиентскими данными")
+
+Container_Boundary(prop.client.tour, "client-tour-app", "Kotlin, SpringBoot", "Приложение для проведения 3D-тура по объекту недвижимости (онлайн-тур)") {
+        Component(prop.client.tour.app, "client-tour-app", "Kotlin, SpringBoot", "Приложение для проведения 3D-тура по объекту недвижимости (онлайн-тур)")
+        ComponentDb(prop.client.tour.db, "client-tour-db", "PostgreSQL", "База данных проведения онлайн-тура")
+        Rel_D(prop.client.tour.app, prop.client.tour.db, "", "JDBC")
+}
+
+Rel_D(prop.client.storefront, prop.client.tour.app, "", "")
+Rel_R(prop.client.crm, prop.client.tour.app, "Публикация каталога объектов", "Kafka")
+
+@enduml
+
+
+
