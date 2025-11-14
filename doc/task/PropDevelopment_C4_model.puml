@@ -1,0 +1,150 @@
+@startuml
+
+!theme carbon-gray
+!include <C4/C4_Component>
+!include doc/common/c4-custom-rel.iuml
+!include doc/common/theme.iuml
+
+' так сделано в изначальной схеме
+SHOW_PERSON_OUTLINE()
+' LAYOUT_LEFT_RIGHT()
+' LAYOUT_LANDSCAPE()
+
+
+title PropDevelopment — C4 Component
+header «название организации»
+
+AddElementTag("firewall", $bgColor="red")
+
+Person(client, "Клиент", "Клиент")
+Person(owner, "Собственник", "Клиент")
+Person(manager, "Менеджер", "Работает с клиентами и объектами недвижимости, администрирует онлайн-сделки")
+Person(accountant, "Бухгалтер", "Ведёт бухгалтерский учёт")
+Person(business_analyst, "Бизнес-аналитик", "Оптимизирует процессы и развивает прикладные бизнес-системы. Администрирует системы")
+Person(bi_analyst, "Аналитик BI", "Анализирует данные и готовит отчётность")
+
+Component(firewall1, "Firewall", $tags="firewall")
+Component(firewall2, "Firewall", $tags="firewall")
+
+System_Ext(gov_reg, "Государственные регистрационные органы", "Отвечают за регистрационные действия с объектами недвижимости")
+System_Ext(payment_system, "Платёжная система", "Провайдер онлайн-платежей")
+System_Ext(utility_provider, "Поставщик ресурсов ЖКХ")
+
+Boundary(prop_development, "PropDevelopment") {
+    Boundary(client_services, "Группа сервисов для клиентов") {
+        Container(storefront, "Витрина продаж", "JavaScript, React", "Витрина для подбора и бронирования объектов недвижимости")
+        Container(client_mart_estate_app, "client-mart-estate-app", "Kotlin, SpringBoot", "Приложение для управления информацией об объектах недвижимости")
+        ContainerDb(client_mart_estate_db, "client-mart-estate-db", "PostgreSQL", "База данных объектов недвижимости")
+        Container(client_mart_app, "client-mart-app", "Kotlin, SpringBoot", "Приложение для: - предоставления информации об объектах недвижимости, - проведения онлайн-сделок")
+        ContainerDb(client_mart_db, "client-mart-db", "PostgreSQL", "База данных для хранения информации об объектах недвижимости и сделкам по ним")
+        Container(client_tour_app, "client-tour-app", "Kotlin, SpringBoot", "Приложение для проведения 3D-тура по объекту недвижимости (онлайн-тур)")
+        ContainerDb(client_tour_db, "client-tour-db", "PostgreSQL", "База данных проведения онлайн-тура")
+        Container(client_crm_app, "client-crm-app", "e.g. SpringBoot, ElasticSearch, Dynamics CRM", "Система управления клиентскими данными")
+        ContainerDb(crm_db, "crm-db", "MSSQL", "База данных системы CRM")
+    }
+
+    Boundary(zku_services, "Группа сервисов ЖКУ") {
+        Container(owner_apps, "Витрина сервисов для собственников", "Mobile app(iOS, Android)", "Мобильные приложения для собственников")
+        Container(tenant_core_app, "tenant-core-app", "Kotlin, SpringBoot", "Приложение для предоставления услуг собственникам")
+        ContainerDb(tenant_core_db, "tenant-core-db", "PostgreSQL", "База данных услуг ЖКХ по собственникам")
+        Container(crm, "CRM", "Kotlin, Spring Boot", "Система управления данными собственников")
+        ContainerDb(crm_tenant_db, "crm-tenant-db", "PostgreSQL", "База данных CRM по собственникам")
+    }
+
+    Boundary(storage, "") {
+        Container(dwh, "Хранилище данных", "Greenplum", "Единое хранилище данных для всех систем компании")
+        ContainerDb(dwh_storage, "DWH Хранилище", "S3", "Физическое хранилище данных DWH")
+    }
+
+    Boundary(accountant_group, "") {
+        Container(accountant_service, "accountant-service-1", "Keycloak", "Система бухгалтерского учёта")
+        Container(ad_apps, "Active Directory", "MS Active directory", "Служба каталогов, которая обслуживает прикладные бизнес-системы и системы обработки данных")
+        ContainerDb(auth_db2, "auth-db-1", "PostgreSQL", "База данных сервиса аутентификации покупателей")
+    }
+
+    ' Interface "foo\nbar" as auth_service_in
+    Container(auth_service, "auth-service-1", "Keycloak", "Сервис аутентификации покупателей")
+    ContainerDb(auth_db1, "auth-db-1", "PostgreSQL", "База данных сервиса аутентификации покупателей")
+
+    Container(ad_data, "Active Directory", "MS Active directory", "Служба каталогов, которая обслуживает финансовые сервисы")
+
+
+
+}
+
+Rel_D(client, firewall1, "")
+Rel_D(firewall1, storefront, "")
+
+Rel_D(owner, firewall2, "")
+Rel_D(firewall2, owner_apps, "")
+
+Rel_D(storefront, auth_service, "Регистрация\nАутентификация", "REST")
+Rel_D(owner_apps, auth_service, "Регистрация\nАутентификация", "REST")
+
+Rel_D(auth_service, auth_db1, "")
+
+Rel_D(storefront, client_mart_app, "", "REST")
+Rel_D(client_mart_app, client_mart_db, "", "JDBC")
+Rel_D(client_mart_db, dwh, "Передача сырых данных", "CDC")
+
+Rel(storefront, client_mart_estate_app, "Получить данные по объектам недвижимости", "REST")
+Rel(client_mart_estate_app, client_mart_estate_db, "", "JDBC")
+Rel(client_mart_estate_db, dwh, "Передача сырых данных", "CDC")
+
+Rel(storefront, client_crm_app, "Регистрация клиента\nКарточка клиента\nПрофиль клиента", "REST")
+Rel(client_crm_app, crm_db, "", "JDBC")
+Rel(crm_db, dwh, "Передача сырых данных", "CDC")
+
+Rel(storefront, client_tour_app, "", "")
+Rel(client_tour_app, client_tour_db, "", "")
+
+Rel_L(client_crm_app, client_mart_app, "Публикация каталога объектов", "Kafka")
+Rel_R(client_crm_app, client_tour_app, "Публикация каталога объектов", "Kafka")
+
+Rel_L(client_mart_app, gov_reg, "СМЭВ", "SOAP")
+
+Rel(client_crm_app, ad_data, "Аутентификация менеджеров")
+
+Rel(accountant_service, ad_apps, "Аутентификация")
+Rel(accountant_service, auth_db2, "")
+Rel(accountant, accountant_service, "")
+
+Rel_L(dwh, ad_data, "Аутентификация бизнес-аналитика")
+Rel(dwh, dwh_storage, "")
+
+
+
+Rel(owner_apps, tenant_core_app, "", "REST/WS")
+Rel(tenant_core_app, tenant_core_db, "", "JDBC")
+Rel(tenant_core_db, dwh, "Передача сырых данных", "CDC")
+
+Rel(owner_apps, crm, "", "REST")
+Rel(crm, crm_tenant_db, "", "JDBC")
+Rel(crm_tenant_db, dwh, "Передача сырых данных", "CDC")
+
+Rel_L(tenant_core_app, crm, "Получение клиентских данных", "REST")
+Rel_R(tenant_core_app, payment_system, "")
+Rel_R(tenant_core_app, utility_provider, "")
+
+Rel(crm, ad_data, "Аутентификация менеджеров")
+
+Rel(business_analyst, prop_development, "")
+
+Rel(manager, prop_development, "")
+
+' Rel(client_crm_app, ad_apps, "Аутентификация менеджеров")
+
+' Rel(client, storefront, "Подыскивает и бронирует объекты")
+' Rel(owner, owner_apps, "Пользуется сервисами для собственников")
+Rel(bi_analyst, dwh, "Анализ данных")
+
+
+
+
+
+' Rel(client_mart_app, client_mart_db, "", "JDBC")
+
+
+
+@enduml
+
