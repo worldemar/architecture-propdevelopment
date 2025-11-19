@@ -1,0 +1,11 @@
+@startsalt
+
+!$priority_codes = {
+    "unknown"  : "<back:lightgray>Не известен",
+    "low"      : "<back:lightgreen>Низкий",
+    "medium"   : "<back:yellow>Средний",
+    "high"     : "<back:red><color:yellow>Высокий",
+    "critical" : "<back:purple><color:yellow>Критический"
+}
+
+@endsalt

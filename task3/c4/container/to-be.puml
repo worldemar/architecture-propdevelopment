@@ -1,0 +1,114 @@
+@startuml
+
+!theme carbon-gray
+!include <C4/C4_Container>
+!include doc/common/c4-custom-rel.iuml
+!include doc/common/theme.iuml
+
+' так сделано в изначальной схеме
+SHOW_PERSON_OUTLINE()
+
+title PropDevelopment — C4 Container (to-be, Smart Home)
+header «PropDevelopment»
+
+AddElementTag("firewall", $bgColor="red")
+
+Person(client, "Клиент", "Клиент")
+Person(owner, "Собственник", "Клиент")
+Person(manager, "Менеджер", "Работает с клиентами и объектами недвижимости, администрирует онлайн-сделки")
+Person(accountant, "Бухгалтер", "Ведёт бухгалтерский учёт")
+Person(business_analyst, "Бизнес-аналитик", "Оптимизирует процессы и развивает прикладные бизнес-системы. Администрирует системы")
+Person(bi_analyst, "Аналитик BI", "Анализирует данные и готовит отчётность")
+
+Container(prop.firewall.client, "Firewall", $tags="firewall")
+Container(prop.firewall.owner, "Firewall", $tags="firewall")
+
+System_Ext(gov_reg, "Государственные регистрационные органы", "Отвечают за регистрационные действия с объектами недвижимости")
+System_Ext(payment_system, "Платёжная система", "Провайдер онлайн-платежей")
+System_Ext(utility_provider, "Поставщик ресурсов ЖКХ")
+System_Ext(smarthome_platform, "Smart Home Platform", "Платформа партнёра «Умный дом»")
+
+Boundary(prop, "PropDevelopment") {
+    Boundary(prop.client, "Группа сервисов для клиентов") {
+        Container(prop.client.storefront, "Витрина продаж", "JavaScript, React", "Витрина для подбора и бронирования объектов недвижимости")
+        Container(prop.client.mart_estate, "client-mart-estate-app", "Kotlin, SpringBoot", "Приложение для управления информацией об объектах недвижимости")
+        Container(prop.client.mart, "client-mart-app", "Kotlin, SpringBoot", "Приложение для: - предоставления информации об объектах недвижимости, - проведения онлайн-сделок")
+        Container(prop.client.tour, "client-tour-app", "Kotlin, SpringBoot", "Приложение для проведения 3D-тура по объекту недвижимости (онлайн-тур)")
+        Container(prop.client.crm, "client-crm-app", "e.g. SpringBoot, ElasticSearch, Dynamics CRM", "Система управления клиентскими данными")
+
+        Rel_D(prop.client.storefront, prop.client.mart, "", "REST")
+        Rel_D(prop.client.storefront, prop.client.mart_estate, "Получить данные по объектам недвижимости", "REST")
+        Rel_D(prop.client.storefront, prop.client.crm, "Регистрация клиента\nКарточка клиента\nПрофиль клиента", "REST")
+        Rel_D(prop.client.storefront, prop.client.tour, "", "")
+
+        Rel_L(prop.client.crm, prop.client.mart, "Публикация каталога объектов", "Kafka")
+        Rel_R(prop.client.crm, prop.client.tour, "Публикация каталога объектов", "Kafka")
+
+        Rel_U(prop.client.mart, gov_reg, "СМЭВ", "SOAP")
+
+        Lay_R(prop.client.mart_estate, prop.client.mart)
+    }
+
+    Boundary(prop.zku, "Группа сервисов ЖКУ") {
+        Container(prop.zku.storefront, "Витрина сервисов для собственников", "Mobile app(iOS, Android)", "Мобильные приложения для собственников")
+        Container(prop.zku.tenant_core, "tenant-core-app", "Kotlin, SpringBoot", "Приложение для предоставления услуг собственникам")
+        Container(prop.zku.crm, "CRM", "Kotlin, Spring Boot", "Система управления данными собственников")
+
+        Rel(prop.zku.storefront, prop.zku.tenant_core, "Моб. приложение (JWT OIDC)", "REST/WS")
+        Rel(prop.zku.storefront, prop.zku.crm, "Профиль/обращения", "REST")
+        Rel_L(prop.zku.tenant_core, prop.zku.crm, "Получение клиентских данных", "REST")
+        Rel_R(prop.zku.tenant_core, payment_system, "Оплата ЖКУ", "REST")
+        Rel_R(prop.zku.tenant_core, utility_provider, "Запросы к поставщику ресурсов", "REST/SOAP")
+
+        Container(prop.zku.smart_access, "smart-access-service", "Kotlin, SpringBoot", "Оркестратор доступа (домофон, шлагбаум)")
+
+        Rel_D(prop.zku.tenant_core, prop.zku.smart_access, "Команды доступа\n(mTLS + JWT)", "REST/WS")
+        ARel(prop.zku.smart_access, prop.zku.crm, "Обогащение клиентских данных (R/O)", "REST", $arrow="-[norank]->")
+
+        Container(prop.dmz.api_gateway, "API Gateway/WAF (DMZ)", "Nginx/WAF", "Входной шлюз для вебхуков Smart Home")
+        Rel_D(prop.zku.smart_access, smarthome_platform, "Команды/запросы", "HTTPS + OAuth2 CC")
+        Rel_L(smarthome_platform, prop.dmz.api_gateway, "Webhooks (mTLS + подпись)", "HTTPS")
+        Rel_L(prop.dmz.api_gateway, prop.zku.smart_access, "Проксирование в сервис", "HTTPS")
+    }
+
+    Container(prop.storage, "Хранилище данных", "Greenplum", "Единое хранилище данных для всех систем компании")
+    Rel_D(prop.client.mart, prop.storage, "Передача сырых данных", "CDC")
+    Rel_D(prop.client.mart_estate, prop.storage, "Передача сырых данных", "CDC")
+    Rel_D(prop.client.crm, prop.storage, "Передача сырых данных", "CDC")
+    Rel_D(prop.zku.tenant_core, prop.storage, "Передача сырых данных", "CDC")
+    Rel_D(prop.zku.crm, prop.storage, "Передача сырых данных", "CDC")
+    Rel_D(prop.zku.smart_access, prop.storage, "Передача событий доступа", "CDC")
+
+    Container(prop.accountant.service, "accountant-service", "Java, Spring Boot", "Система бухгалтерского учёта")
+
+    Container(prop.auth, "Keycloak", "Сервис аутентификации покупателей")
+    Rel_R(prop.client.storefront, prop.auth, "Регистрация\nАутентификация", "REST")
+    Rel_U(prop.zku.storefront, prop.auth, "Регистрация\nАутентификация", "REST")
+
+    Container(prop.ad.data, "Active Directory", "MS Active directory", "Служба каталогов, которая обслуживает финансовые сервисы")
+    Rel_D(prop.client.crm, prop.ad.data, "Аутентификация менеджеров")
+    Rel_U(prop.storage, prop.ad.data, "Аутентификация бизнес-аналитика")
+    Rel_L(prop.zku.crm, prop.ad.data, "Аутентификация менеджеров")
+}
+
+Rel_R(client, prop.firewall.client, "")
+Rel_D(prop.firewall.client, prop.client.storefront, "")
+
+Rel_D(owner, prop.firewall.owner, "")
+Rel_L(prop.firewall.owner, prop.zku.storefront, "")
+
+Rel_D(business_analyst, prop, "")
+Rel_D(manager, prop, "")
+
+Rel_U(bi_analyst, prop.storage, "")
+
+Rel_D(accountant, prop.accountant.service, "")
+
+Lay_D(prop.client.tour, prop.ad.data)
+Lay_R(prop.firewall.client, accountant)
+
+Lay_D(payment_system, utility_provider)
+
+@enduml
+
+

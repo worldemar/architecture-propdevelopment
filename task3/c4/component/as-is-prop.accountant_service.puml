@@ -1,0 +1,26 @@
+@startuml
+
+!theme carbon-gray
+!include <C4/C4_Component>
+!include doc/common/c4-custom-rel.iuml
+!include doc/common/theme.iuml
+
+' так сделано в изначальной схеме
+SHOW_PERSON_OUTLINE()
+
+title PropDevelopment — C4 Component - accountant-service
+header «PropDevelopment»
+
+Person(accountant, "Бухгалтер", "Ведёт бухгалтерский учёт")
+
+Container_Boundary(prop.accountant.service, "accountant-service", "Keycloak", "Система бухгалтерского учёта") {
+        Component(prop.accountant.service.app, "accountant-service-1", "Keycloak", "Система бухгалтерского учёта")
+        ComponentDb(prop.accountant.service.db, "auth-db-2", "PostgreSQL", "База данных сервиса аутентификации покупателей")
+        Component(prop.accountant.service.ad_apps, "Active Directory", "MS Active directory", "Служба каталогов, которая обслуживает прикладные бизнес-системы и системы обработки данных")
+        Rel_L(prop.accountant.service.app, prop.accountant.service.db, "")
+        Rel_R(prop.accountant.service.app, prop.accountant.service.ad_apps, "Аутентификация")
+}
+
+Rel_U(accountant, prop.accountant.service.app, "")
+
+@enduml
