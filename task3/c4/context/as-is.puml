@@ -1,0 +1,52 @@
+@startuml
+
+!theme carbon-gray
+!include <C4/C4_Context>
+!include doc/common/c4-custom-rel.iuml
+!include doc/common/theme.iuml
+
+' так сделано в изначальной схеме
+SHOW_PERSON_OUTLINE()
+
+title PropDevelopment - C4 Context
+header «PropDevelopment»
+
+AddElementTag("firewall", $bgColor="crimson", $borderColor="red")
+
+Person(client, "Клиент", "Клиент")
+Person(owner, "Собственник", "Клиент")
+Person(manager, "Менеджер", "Работает с клиентами и объектами недвижимости, администрирует онлайн-сделки")
+Person(accountant, "Бухгалтер", "Ведёт бухгалтерский учёт")
+Person(business_analyst, "Бизнес-аналитик", "Оптимизирует процессы и развивает прикладные бизнес-системы. Администрирует системы")
+Person(bi_analyst, "Аналитик BI", "Анализирует данные и готовит отчётность")
+
+System(prop.firewall.client, "Firewall\n(клиенты)", $tags="firewall")
+System(prop.firewall.owner, "Firewall\n(собственники)", $tags="firewall")
+
+System_Ext(gov_reg, "Государственные регистрационные органы", "Отвечают за регистрационные действия с объектами недвижимости")
+System_Ext(payment_system, "Платёжная система", "Провайдер онлайн-платежей")
+System_Ext(utility_provider, "Поставщик ресурсов ЖКХ")
+
+System(prop, "PropDevelopment", "")
+
+Rel_D(client, prop.firewall.client, "")
+Rel_D(prop.firewall.client, prop, "")
+
+Rel_D(owner, prop.firewall.owner, "")
+Rel_D(prop.firewall.owner, prop, "")
+
+Rel_D(business_analyst, prop, "")
+Rel_D(manager, prop, "")
+
+Rel_U(bi_analyst, prop, "")
+
+Rel_U(accountant, prop, "")
+
+Rel_L(prop, gov_reg, "СМЭВ", "SOAP")
+
+Rel_D(prop, payment_system, "")
+
+Rel_R(prop, utility_provider, "")
+
+@enduml
+

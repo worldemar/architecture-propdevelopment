@@ -1,0 +1,29 @@
+@startuml
+
+!theme carbon-gray
+!include <C4/C4_Component>
+!include doc/common/c4-custom-rel.iuml
+!include doc/common/theme.iuml
+
+' так сделано в изначальной схеме
+SHOW_PERSON_OUTLINE()
+
+title PropDevelopment - C4 Component - Keycloak (auth)
+header «PropDevelopment»
+
+Container(prop.client.storefront, "Витрина продаж", "JavaScript, React", "Витрина для подбора и бронирования объектов недвижимости")
+Container(prop.zku.storefront, "Витрина сервисов для собственников", "Mobile app(iOS, Android)", "Мобильные приложения для собственников")
+
+Container_Boundary(prop.auth, "Keycloak", "Сервис аутентификации покупателей") {
+        Component(prop.auth.service, "auth-service-1", "Keycloak", "Сервис аутентификации покупателей")
+        ComponentDb(prop.auth.db, "auth-db-1", "PostgreSQL", "База данных сервиса аутентификации покупателей")
+        Rel_U(prop.auth.service, prop.auth.db, "")
+}
+
+Rel_R(prop.client.storefront, prop.auth.service, "Регистрация\nАутентификация", "REST")
+Rel_L(prop.zku.storefront, prop.auth.service, "Регистрация\nАутентификация", "REST")
+
+@enduml
+
+
+

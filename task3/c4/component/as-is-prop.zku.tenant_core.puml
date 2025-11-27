@@ -1,0 +1,31 @@
+@startuml
+
+!theme carbon-gray
+!include <C4/C4_Component>
+!include doc/common/c4-custom-rel.iuml
+!include doc/common/theme.iuml
+
+' так сделано в изначальной схеме
+SHOW_PERSON_OUTLINE()
+
+title PropDevelopment - C4 Component - tenant-core-app
+header «PropDevelopment»
+
+Container(prop.zku.storefront, "Витрина сервисов для собственников", "Mobile app(iOS, Android)", "Мобильные приложения для собственников")
+Container(prop.zku.crm, "CRM", "Kotlin, Spring Boot", "Система управления данными собственников")
+Container(prop.storage, "Хранилище данных", "Greenplum", "Единое хранилище данных для всех систем компании")
+
+Container_Boundary(prop.zku.tenant_core, "tenant-core-app", "Kotlin, SpringBoot", "Приложение для предоставления услуг собственникам") {
+        Component(prop.zku.tenant_core.app, "tenant-core-app", "Kotlin, SpringBoot", "Приложение для предоставления услуг собственникам")
+        ComponentDb(prop.zku.tenant_core.db, "tenant-core-db", "PostgreSQL", "База данных услуг ЖКХ по собственникам")
+        Rel(prop.zku.tenant_core.app, prop.zku.tenant_core.db, "", "JDBC")
+}
+
+Rel(prop.zku.storefront, prop.zku.tenant_core.app, "", "REST/WS")
+Rel_L(prop.zku.tenant_core.app, prop.zku.crm, "Получение клиентских данных", "REST")
+Rel(prop.zku.tenant_core.db, prop.storage, "Передача сырых данных", "CDC")
+
+@enduml
+
+
+

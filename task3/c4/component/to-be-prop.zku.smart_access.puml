@@ -1,0 +1,43 @@
+@startuml
+
+!theme carbon-gray
+!include <C4/C4_Component>
+!include doc/common/c4-custom-rel.iuml
+!include doc/common/theme.iuml
+
+' так сделано в изначальной схеме
+SHOW_PERSON_OUTLINE()
+
+title PropDevelopment - C4 Component - smart-access-service (to-be)
+header «PropDevelopment»
+
+Container(prop.zku.tenant_core, "tenant-core-app", "Kotlin, SpringBoot", "Приложение для предоставления услуг собственникам")
+Container(prop.zku.crm, "CRM", "Kotlin, Spring Boot", "Система управления данными собственников")
+Container(prop.storage, "Хранилище данных", "Greenplum", "Единое хранилище данных для всех систем компании")
+System_Ext(ext.smarthome.platform, "Smart Home Platform", "Платформа партнёра «Умный дом»")
+
+Container_Boundary(prop.zku.smart_access, "smart-access-service", "Kotlin, SpringBoot", "Оркестратор доступа (домофон, шлагбаум)") {
+        Component(prop.zku.smart_access.api, "smart-access-api", "REST/WS", "Публичный API управления доступом")
+        Component(prop.zku.smart_access.policy_engine, "policy-engine", "Java/Kotlin", "Проверка политик доступа и прав")
+        Component(prop.zku.smart_access.partner_client, "partner-client", "Java/Kotlin", "Клиент интеграции с платформой партнёра")
+        Component(prop.zku.smart_access.webhook_handler, "webhook-handler", "Java/Kotlin", "Приём и верификация вебхуков событий")
+        Component(prop.zku.smart_access.secret_store, "secret-store", "KMS/Vault", "Хранение секретов/сертификатов; ротация")
+        ComponentDb(prop.zku.smart_access.db, "smart-access-db", "PostgreSQL", "Правила доступа, связи, события")
+
+        Rel(prop.zku.smart_access.api, prop.zku.smart_access.policy_engine, "Проверка политики доступа")
+        Rel(prop.zku.smart_access.policy_engine, prop.zku.smart_access.db, "Чтение политик и прав", "JDBC")
+        Rel(prop.zku.smart_access.webhook_handler, prop.zku.smart_access.db, "Запись событий", "JDBC")
+        Rel(prop.zku.smart_access.partner_client, prop.zku.smart_access.secret_store, "Чтение секретов")
+        Rel_U(prop.zku.smart_access.webhook_handler, prop.zku.smart_access.secret_store, "Верификация подписи (ключ)")
+        Rel(prop.zku.smart_access.partner_client, ext.smarthome.platform, "Команды/запросы", "HTTPS")
+}
+
+Rel(prop.zku.tenant_core, prop.zku.smart_access.api, "Команды доступа", "REST/WS")
+Rel_L(prop.zku.smart_access.api, prop.zku.crm, "Обогащение контекстом (R/O)", "REST")
+Rel_D(prop.zku.smart_access.db, prop.storage, "Передача событий доступа", "CDC")
+Rel_L(ext.smarthome.platform, prop.zku.smart_access.webhook_handler, "События (webhooks: подпись, anti-replay)", "HTTPS")
+Rel_R(prop.zku.smart_access.api, prop.zku.smart_access.partner_client, "Отправка команд партнёру")
+
+@enduml
+
+

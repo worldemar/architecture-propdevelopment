@@ -1,0 +1,67 @@
+@startuml
+
+!include doc/common/theme.iuml
+!include security-areas-priorities.iuml
+!include security-areas-responsibles.iuml
+!include security-areas-statuses.iuml
+
+!function $decode($list, $dict)
+!$decoded = []
+!foreach $key in $list
+    !$decoded = %json_add($decoded, $dict[$key])
+!endfor
+!return $decoded
+!endfunction
+
+!procedure $multiline_cell_with_margins($lines, $font, $size, $margin)
+!$em_space = "<U+2003>"
+!$emmargin = "<size:" + $margin + ">" + $em_space + "</size>"
+{
+    $emmargin|$emmargin|$emmargin
+    !foreach $str in $lines
+        $emmargin|<font:$font><size:$size>$str</size>|$emmargin
+    !endfor
+    $emmargin|$emmargin|$emmargin
+}
+!endprocedure
+
+!procedure $row($args)
+!$priority = %json_add([], $priority_codes[$args.priority])
+!$status = %json_add([], $status_codes[$args.status])
+!$responsibles = $decode($args.responsible, $responsible_codes)
+$multiline_cell_with_margins($args.type,        $FONT_NAME_SMALL, $FONT_SIZE_SMALL, 4) |
+$multiline_cell_with_margins($args.control,     $FONT_NAME_SMALL, $FONT_SIZE_SMALL, 4) |
+$multiline_cell_with_margins($args.area,        $FONT_NAME_SMALL, $FONT_SIZE_SMALL, 4) |
+$multiline_cell_with_margins($args.desc,        $FONT_NAME_SMALL, $FONT_SIZE_SMALL, 4) |
+$multiline_cell_with_margins($priority,         $FONT_NAME_SMALL, $FONT_SIZE_SMALL, 4) |
+$multiline_cell_with_margins($args.artefacts,   $FONT_NAME_SMALL, $FONT_SIZE_SMALL, 4) |
+$multiline_cell_with_margins($responsibles,     $FONT_NAME_SMALL, $FONT_SIZE_SMALL, 4) |
+$multiline_cell_with_margins($status,           $FONT_NAME_SMALL, $FONT_SIZE_SMALL, 4)
+!endprocedure
+
+!procedure $header($args)
+$multiline_cell_with_margins($args.type,        $FONT_NAME_MEDIUM, $FONT_SIZE_MEDIUM, $FONT_SIZE_MEDIUM) |
+$multiline_cell_with_margins($args.control,     $FONT_NAME_MEDIUM, $FONT_SIZE_MEDIUM, $FONT_SIZE_MEDIUM) |
+$multiline_cell_with_margins($args.area,        $FONT_NAME_MEDIUM, $FONT_SIZE_MEDIUM, $FONT_SIZE_MEDIUM) |
+$multiline_cell_with_margins($args.desc,        $FONT_NAME_MEDIUM, $FONT_SIZE_MEDIUM, $FONT_SIZE_MEDIUM) |
+$multiline_cell_with_margins($args.priority,    $FONT_NAME_MEDIUM, $FONT_SIZE_MEDIUM, $FONT_SIZE_MEDIUM) |
+$multiline_cell_with_margins($args.artefacts,   $FONT_NAME_MEDIUM, $FONT_SIZE_MEDIUM, $FONT_SIZE_MEDIUM) |
+$multiline_cell_with_margins($args.responsible, $FONT_NAME_MEDIUM, $FONT_SIZE_MEDIUM, $FONT_SIZE_MEDIUM) |
+$multiline_cell_with_margins($args.status,           $FONT_NAME_MEDIUM, $FONT_SIZE_MEDIUM, $FONT_SIZE_MEDIUM)
+!endprocedure
+
+!procedure $rows($rows_data)
+!foreach $rd in $rows_data
+    $row($rd)
+!endfor
+!endprocedure
+
+!procedure $table($header_data, $rows_data)
+{#
+    $header($args_header)
+    $rows($args_rows)
+}
+!endprocedure
+
+@enduml
+

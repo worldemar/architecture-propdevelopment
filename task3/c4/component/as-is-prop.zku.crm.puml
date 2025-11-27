@@ -1,0 +1,33 @@
+@startuml
+
+!theme carbon-gray
+!include <C4/C4_Component>
+!include doc/common/c4-custom-rel.iuml
+!include doc/common/theme.iuml
+
+' так сделано в изначальной схеме
+SHOW_PERSON_OUTLINE()
+
+title PropDevelopment - C4 Component - CRM (ЖКУ)
+header «PropDevelopment»
+
+Container(prop.zku.storefront, "Витрина сервисов для собственников", "Mobile app(iOS, Android)", "Мобильные приложения для собственников")
+Container(prop.zku.tenant_core, "tenant-core-app", "Kotlin, SpringBoot", "Приложение для предоставления услуг собственникам")
+Container(prop.ad.data, "Active Directory", "MS Active directory", "Служба каталогов, которая обслуживает финансовые сервисы")
+Container(prop.storage, "Хранилище данных", "Greenplum", "Единое хранилище данных для всех систем компании")
+
+Container_Boundary(prop.zku.crm, "CRM", "Kotlin, Spring Boot", "Система управления данными собственников") {
+        Component(prop.zku.crm.app, "CRM", "Kotlin, Spring Boot", "Система управления данными собственников")
+        ComponentDb(prop.zku.crm.db, "crm-tenant-db", "PostgreSQL", "База данных CRM по собственникам")
+        Rel(prop.zku.crm.app, prop.zku.crm.db, "", "JDBC")
+}
+
+Rel(prop.zku.storefront, prop.zku.crm.app, "", "REST")
+Rel_L(prop.zku.tenant_core, prop.zku.crm.app, "Получение клиентских данных", "REST")
+Rel(prop.zku.crm.app, prop.ad.data, "Аутентификация менеджеров")
+Rel(prop.zku.crm.db, prop.storage, "Передача сырых данных", "CDC")
+
+@enduml
+
+
+

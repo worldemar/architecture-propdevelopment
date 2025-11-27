@@ -1,0 +1,31 @@
+@startuml
+
+!theme carbon-gray
+!include <C4/C4_Component>
+!include doc/common/c4-custom-rel.iuml
+!include doc/common/theme.iuml
+
+' так сделано в изначальной схеме
+SHOW_PERSON_OUTLINE()
+
+title PropDevelopment - C4 Component - client-mart-app
+header «PropDevelopment»
+
+Container(prop.client.storefront, "Витрина продаж", "JavaScript, React", "Витрина для подбора и бронирования объектов недвижимости")
+Container(prop.client.crm, "client-crm-app", "e.g. SpringBoot, ElasticSearch, Dynamics CRM", "Система управления клиентскими данными")
+Container(prop.storage, "Хранилище данных", "Greenplum", "Единое хранилище данных для всех систем компании")
+
+Container_Boundary(prop.client.mart, "client-mart-app", "Kotlin, SpringBoot", "Приложение для: - предоставления информации об объектах недвижимости, - проведения онлайн-сделок") {
+        Component(prop.client.mart.app, "client-mart-app", "Kotlin, SpringBoot", "Приложение для: - предоставления информации об объектах недвижимости, - проведения онлайн-сделок")
+        ComponentDb(prop.client.mart.db, "client-mart-db", "PostgreSQL", "База данных для хранения информации об объектах недвижимости и сделкам по ним")
+        Rel_D(prop.client.mart.app, prop.client.mart.db, "", "JDBC")
+}
+
+Rel_D(prop.client.storefront, prop.client.mart.app, "", "REST")
+Rel_L(prop.client.crm, prop.client.mart.app, "Публикация каталога объектов", "Kafka")
+Rel_D(prop.client.mart.db, prop.storage, "Передача сырых данных", "CDC")
+
+@enduml
+
+
+

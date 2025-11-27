@@ -1,0 +1,39 @@
+@startuml
+
+!theme carbon-gray
+!include <C4/C4_Component>
+!include doc/common/c4-custom-rel.iuml
+!include doc/common/theme.iuml
+
+' так сделано в изначальной схеме
+SHOW_PERSON_OUTLINE()
+
+title PropDevelopment - C4 Component - Хранилище данных (DWH)
+header «PropDevelopment»
+
+Person(bi_analyst, "Аналитик BI", "Анализирует данные и готовит отчётность")
+Container(prop.client.mart, "client-mart-app", "Kotlin, SpringBoot", "Приложение для: - предоставления информации об объектах недвижимости, - проведения онлайн-сделок")
+Container(prop.client.mart_estate, "client-mart-estate-app", "Kotlin, SpringBoot", "Приложение для управления информацией об объектах недвижимости")
+Container(prop.client.crm, "client-crm-app", "e.g. SpringBoot, ElasticSearch, Dynamics CRM", "Система управления клиентскими данными")
+Container(prop.zku.tenant_core, "tenant-core-app", "Kotlin, SpringBoot", "Приложение для предоставления услуг собственникам")
+Container(prop.zku.crm, "CRM", "Kotlin, Spring Boot", "Система управления данными собственников")
+Container(prop.ad.data, "Active Directory", "MS Active directory", "Служба каталогов, которая обслуживает финансовые сервисы")
+
+Container_Boundary(prop.storage, "Хранилище данных", "Greenplum", "Единое хранилище данных для всех систем компании") {
+        Component(prop.storage.app, "Хранилище данных", "Greenplum", "Единое хранилище данных для всех систем компании")
+        ComponentDb(prop.storage.db, "DWH Хранилище", "S3", "Физическое хранилище данных DWH")
+        Rel(prop.storage.app, prop.storage.db, "")
+}
+
+Rel_D(prop.client.mart, prop.storage.app, "Передача сырых данных", "CDC")
+Rel_D(prop.client.mart_estate, prop.storage.app, "Передача сырых данных", "CDC")
+Rel_D(prop.client.crm, prop.storage.app, "Передача сырых данных", "CDC")
+Rel_D(prop.zku.tenant_core, prop.storage.app, "Передача сырых данных", "CDC")
+Rel_D(prop.zku.crm, prop.storage.app, "Передача сырых данных", "CDC")
+Rel_U(bi_analyst, prop.storage.app, "")
+Rel_R(prop.storage.app, prop.ad.data, "Аутентификация бизнес-аналитика")
+
+@enduml
+
+
+
